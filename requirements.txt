@@ -1,0 +1,5 @@
+streamlit>=1.45.1
+transformers
+plotly
+numpy
+trafilatura>=2.0.0
