@@ -11,20 +11,42 @@ st.set_page_config(
     layout="wide"
 )
 
-# Page Title and Description
-st.title("📊 Sentiment Analysis Tool")
-st.markdown("""
-This application analyzes the sentiment of your text.
-Enter text in the box below and see if it has a positive, negative, or neutral sentiment.
-""")
+# Page Title and Description with improved styling
+st.title("📊 Advanced Sentiment Analysis Tool")
+
+# Create a two-column layout for the intro section
+intro_col1, intro_col2 = st.columns([2, 1])
+
+with intro_col1:
+    st.markdown("""
+    This application analyzes the sentiment of text from manual input or web URLs.
+    The analysis breaks down your content into segments and provides detailed sentiment scoring with visualizations.
+    """)
+
+with intro_col2:
+    # Add a sample sentiment meter for visual interest
+    st.markdown("""
+    <div style="background-color:#f0f2f6;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-weight:bold;margin-bottom:5px;">Sentiment Meter</div>
+        <div style="display:flex;justify-content:space-between;">
+            <span style="color:#F44336;">😠</span>
+            <span style="color:#FF9800;">😐</span>
+            <span style="color:#4CAF50;">😊</span>
+        </div>
+        <div style="height:10px;background:linear-gradient(to right, #F44336, #FFEB3B, #4CAF50);border-radius:5px;margin:5px 0;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Add a separator
+st.markdown("---")
 
 # Create sidebar with information
 with st.sidebar:
     st.header("About")
     st.info("""
-    This application uses a simple rule-based sentiment analysis approach.
+    This application uses a simple rule-based sentiment analysis approach to analyze text sentiment.
     
-    The model will classify text as:
+    The analysis will classify text as:
     - 📈 **POSITIVE**
     - 📉 **NEGATIVE**
     - ⚖️ **NEUTRAL**
@@ -32,13 +54,44 @@ with st.sidebar:
     Confidence scores represent the certainty about the prediction.
     """)
     
+    st.header("Features")
+    st.success("""
+    ✅ Analyze text from manual input
+    ✅ Extract and analyze text from URLs
+    ✅ Split text into segments for detailed analysis
+    ✅ Visualize sentiment distribution and progression
+    ✅ Compare positive and negative sentiments
+    """)
+    
     st.header("Instructions")
     st.info("""
-    1. Enter your text in the text area
-    2. Click 'Analyze Sentiment'
-    3. View the results and visualization
-    4. You can analyze multiple paragraphs or sentences at once
+    1. Choose input method (manual text or URL)
+    2. Enter your text or URL
+    3. Click the analyze button
+    4. Explore the visualization tabs
+    5. Review detailed segment-by-segment analysis
     """)
+    
+    st.header("How It Works")
+    with st.expander("See how the analysis works"):
+        st.write("""
+        The sentiment analyzer uses a dictionary-based approach with predefined lists of positive 
+        and negative words. It counts occurrences of these words in each text segment and calculates 
+        sentiment scores based on their relative frequencies.
+        
+        For URL analysis, the application extracts clean text content from web pages 
+        using the Trafilatura library, which is designed to extract main content while 
+        removing navigation elements, advertisements, and other irrelevant content.
+        """)
+        
+        # Show some example words
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Sample positive words:**")
+            st.write("good, great, excellent, amazing, wonderful, happy")
+        with col2:
+            st.write("**Sample negative words:**")
+            st.write("bad, terrible, awful, horrible, poor, disappointed")
 
 # Function to extract text from URL
 def extract_text_from_url(url):
@@ -167,35 +220,104 @@ def simple_sentiment_analysis(text):
     
     return results
 
-# Create a simple bar chart for visualization using Streamlit
+# Create enhanced visualizations for sentiment analysis
 def create_simple_visualization(results):
     # Extract sentiment data for visualization
     segments = [f"Segment {i+1}" for i in range(len(results))]
     positive_scores = [result['scores']['POSITIVE'] for result in results]
     negative_scores = [result['scores']['NEGATIVE'] for result in results]
     
-    # Display a simple bar chart for each segment
-    st.subheader("Sentiment Scores by Segment")
+    # 1. Overall sentiment distribution pie chart
+    st.subheader("Overall Sentiment Distribution")
     
-    for i, segment in enumerate(segments):
-        st.write(f"**{segment}**: {results[i]['text'][:50]}...")
-        
-        # Create a two-column layout for positive/negative scores
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write("Positive Score")
-            # Display positive score as a progress bar
-            st.progress(positive_scores[i])
-            st.write(f"{positive_scores[i]:.2f}")
+    # Count sentiments
+    sentiment_counts = {
+        "Positive": sum(1 for r in results if r['dominant_sentiment'] == 'POSITIVE'),
+        "Negative": sum(1 for r in results if r['dominant_sentiment'] == 'NEGATIVE'),
+        "Neutral": sum(1 for r in results if r['dominant_sentiment'] == 'NEUTRAL')
+    }
+    
+    # Create pie chart data
+    pie_labels = list(sentiment_counts.keys())
+    pie_values = list(sentiment_counts.values())
+    pie_colors = ['#4CAF50', '#F44336', '#2196F3']  # green, red, blue
+    
+    # Only show pie chart if we have data
+    if sum(pie_values) > 0:
+        # Display pie chart using Streamlit's native pyplot integration
+        pie_fig, pie_ax = st.columns([3, 1])
+        with pie_fig:
+            # Create a horizontal bar chart instead of pie chart
+            # (streamlit doesn't have direct pie chart, but this works well)
+            chart_data = {
+                "Sentiment": pie_labels,
+                "Count": pie_values,
+            }
             
-        with col2:
-            st.write("Negative Score")
-            # Display negative score as a progress bar
-            st.progress(negative_scores[i])
-            st.write(f"{negative_scores[i]:.2f}")
+            # Use st.bar_chart for a simple bar chart
+            st.bar_chart(chart_data, x="Sentiment", y="Count", color="#FFAA00")
         
-        st.markdown("---")
+        with pie_ax:
+            for label, count, color in zip(pie_labels, pie_values, pie_colors):
+                st.markdown(f"<div style='color:{color};font-weight:bold;'>{label}: {count}</div>", unsafe_allow_html=True)
+    
+    # 2. Sentiment progression visualization (how sentiment changes through segments)
+    st.subheader("Sentiment Progression")
+    
+    # Create a line chart to show sentiment change across segments
+    progression_chart_data = {
+        "Segment": segments,
+        "Positive Score": positive_scores,
+        "Negative Score": negative_scores
+    }
+    
+    # Display line chart
+    st.line_chart(progression_chart_data, x="Segment")
+    
+    # 3. Detailed segment-by-segment visualization with improved UI
+    st.subheader("Detailed Segment Analysis")
+    
+    # Create tabs for different view options
+    tab1, tab2 = st.tabs(["Individual Segments", "Comparative View"])
+    
+    with tab1:
+        # Individual segment analysis with progress bars
+        for i, segment in enumerate(segments):
+            with st.expander(f"**{segment}**: {results[i]['text'][:50]}...", expanded=(i==0)):
+                # Show the full segment text
+                st.markdown(f"**Full text:** {results[i]['text']}")
+                st.markdown("**Sentiment scores:**")
+                
+                # Create a two-column layout for positive/negative scores
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"<div style='color:#4CAF50;font-weight:bold;'>Positive Score</div>", unsafe_allow_html=True)
+                    # Display positive score as a progress bar
+                    st.progress(positive_scores[i])
+                    st.write(f"{positive_scores[i]:.2f}")
+                    
+                with col2:
+                    st.markdown(f"<div style='color:#F44336;font-weight:bold;'>Negative Score</div>", unsafe_allow_html=True)
+                    # Display negative score as a progress bar
+                    st.progress(negative_scores[i])
+                    st.write(f"{negative_scores[i]:.2f}")
+                
+                # Show dominant sentiment with an icon
+                dominant = results[i]['dominant_sentiment']
+                if dominant == "POSITIVE":
+                    st.markdown("**Dominant sentiment:** 📈 Positive")
+                elif dominant == "NEGATIVE":
+                    st.markdown("**Dominant sentiment:** 📉 Negative")
+                else:
+                    st.markdown("**Dominant sentiment:** ⚖️ Neutral")
+    
+    with tab2:
+        # Comparative bar chart for all segments
+        st.bar_chart({
+            "Positive": positive_scores,
+            "Negative": negative_scores
+        })
 
 # Process and display results when the button is clicked
 if analyze_button:
