@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # Page Title and Description with improved styling
-st.title("📊 Advanced Sentiment Analysis Tool")
+st.title("Advanced Sentiment Analysis Tool")
 
 # Create a two-column layout for the intro section
 intro_col1, intro_col2 = st.columns([2, 1])
@@ -44,7 +44,7 @@ st.markdown("---")
 with st.sidebar:
     st.header("About")
     st.info("""
-    This application uses a simple rule-based sentiment analysis approach to analyze text sentiment.
+    This application uses a sentiment analysis approach to analyze text sentiment.
     
     The analysis will classify text as:
     - 📈 **POSITIVE**
@@ -56,11 +56,11 @@ with st.sidebar:
     
     st.header("Features")
     st.success("""
-    ✅ Analyze text from manual input
-    ✅ Extract and analyze text from URLs
-    ✅ Split text into segments for detailed analysis
-    ✅ Visualize sentiment distribution and progression
-    ✅ Compare positive and negative sentiments
+    1. Analyze text from manual input
+    2. Extract and analyze text from URLs
+    3. Split text into segments for detailed analysis
+    4. Visualize sentiment distribution and progression
+    5. Compare positive and negative sentiments
     """)
     
     st.header("Instructions")
@@ -72,27 +72,6 @@ with st.sidebar:
     5. Review detailed segment-by-segment analysis
     """)
     
-    st.header("How It Works")
-    with st.expander("See how the analysis works"):
-        st.write("""
-        The sentiment analyzer uses a dictionary-based approach with predefined lists of positive 
-        and negative words. It counts occurrences of these words in each text segment and calculates 
-        sentiment scores based on their relative frequencies.
-        
-        For URL analysis, the application extracts clean text content from web pages 
-        using the Trafilatura library, which is designed to extract main content while 
-        removing navigation elements, advertisements, and other irrelevant content.
-        """)
-        
-        # Show some example words
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("**Sample positive words:**")
-            st.write("good, great, excellent, amazing, wonderful, happy")
-        with col2:
-            st.write("**Sample negative words:**")
-            st.write("bad, terrible, awful, horrible, poor, disappointed")
-
 # Function to extract text from URL
 def extract_text_from_url(url):
     try:
@@ -390,7 +369,3 @@ if analyze_button:
                     value=f"{overall_neutral}/{len(results)}",
                     delta=f"{overall_neutral/len(results)*100:.1f}%"
                 )
-
-# Footer
-st.markdown("---")
-st.markdown("Powered by Streamlit")
